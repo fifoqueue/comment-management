@@ -92,8 +92,16 @@
 .cm-actions .cm-action {
 	width: 100%;
 	border: 0;
+	background: Canvas !important;
+	color: CanvasText !important;
 	text-align: left;
 	white-space: nowrap;
+}
+
+.cm-actions .cm-action:hover,
+.cm-actions .cm-action:focus-visible {
+	background: #e2e4e7 !important;
+	color: #1d2327 !important;
 }
 
 .cm-controls button {
@@ -117,8 +125,14 @@
 	opacity: 0.55;
 }
 
-.cm-action-danger {
+.cm-actions .cm-action-danger {
 	color: #b32d2e !important;
+}
+
+.cm-actions .cm-action-danger:hover,
+.cm-actions .cm-action-danger:focus-visible {
+	background: #b32d2e !important;
+	color: #fff !important;
 }
 
 .cm-editor {
