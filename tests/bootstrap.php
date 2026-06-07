@@ -7,6 +7,7 @@
 
 namespace {
 	define( 'ABSPATH', __DIR__ . '/' );
+	define( 'COMMENT_MANAGEMENT_GITHUB_REPOSITORY', 'fifoqueue/comment-management' );
 
 	class WP_Error {
 		public function __construct(
@@ -42,6 +43,8 @@ namespace FiLo\CommentManagement {
 		public static bool $can_moderate = true;
 		public static mixed $mutation_result = true;
 		public static ?array $updated_comment = null;
+		public static array $options = array();
+		public static array $settings_errors = array();
 
 		public static function reset(): void {
 			self::$comment         = new \WP_Comment( 42 );
@@ -49,6 +52,8 @@ namespace FiLo\CommentManagement {
 			self::$can_moderate    = true;
 			self::$mutation_result = true;
 			self::$updated_comment = null;
+			self::$options         = array();
+			self::$settings_errors = array();
 		}
 	}
 
@@ -116,8 +121,42 @@ namespace FiLo\CommentManagement {
 	function is_wp_error( mixed $value ): bool {
 		return $value instanceof \WP_Error;
 	}
+
+	function wp_unslash( mixed $value ): mixed {
+		return $value;
+	}
+
+	function get_option( string $option, mixed $default = false ): mixed {
+		return Test_State::$options[ $option ] ?? $default;
+	}
+
+	function add_option(
+		string $option,
+		mixed $value,
+		string $deprecated = '',
+		bool $autoload = true
+	): bool {
+		unset( $deprecated, $autoload );
+
+		if ( array_key_exists( $option, Test_State::$options ) ) {
+			return false;
+		}
+
+		Test_State::$options[ $option ] = $value;
+		return true;
+	}
+
+	function add_settings_error(
+		string $setting,
+		string $code,
+		string $message,
+		string $type = 'error'
+	): void {
+		Test_State::$settings_errors[] = compact( 'setting', 'code', 'message', 'type' );
+	}
 }
 
 namespace {
 	require_once dirname( __DIR__ ) . '/includes/class-comment-action-service.php';
+	require_once dirname( __DIR__ ) . '/includes/class-updater.php';
 }

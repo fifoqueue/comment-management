@@ -4,7 +4,7 @@ Tags: comments, moderation, wpdiscuz, frontend, wp-cli
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,11 @@ WP-CLI examples:
 
 Updates are delivered from GitHub Releases through Plugin Update Checker.
 
+Update source settings are available under Settings > Comment Management. The
+default repository is `fifoqueue/comment-management`, the default stable branch
+is `master`, and an optional GitHub API token can be saved for private
+repositories or higher API limits.
+
 == Installation ==
 
 1. Install the release ZIP in the WordPress Plugins screen.
@@ -56,6 +61,11 @@ The plugin is compatible with wpDiscuz rendering paths that apply WordPress's st
 Only logged-in users who can edit the specific comment. Assets are limited to users with the `moderate_comments` capability.
 
 == Changelog ==
+
+= 1.0.1 =
+
+* Added configurable GitHub repository, stable branch, and API token settings.
+* Added automatic version tagging and GitHub Release creation on master pushes.
 
 = 1.0.0 =
 

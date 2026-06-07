@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Comment Management 1.0.0\n"
+"Project-Id-Version: Comment Management 1.0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/fifoqueue/comment-management/issues\n"
 "Last-Translator: FiLo\n"
 "Language-Team: Korean\n"
@@ -118,6 +118,80 @@ msgstr "댓글을 수정했습니다."
 msgid "The comment was permanently deleted."
 msgstr "댓글을 영구 삭제했습니다."
 
-#: includes/class-updater.php:48
+#: includes/class-updater.php:303
 msgid "Comment Management is missing its Composer dependencies. Install a release package or run composer install."
 msgstr "Comment Management의 Composer 의존성이 없습니다. 릴리스 패키지를 설치하거나 composer install을 실행하세요."
+
+#. Plugin Name of the plugin
+#: comment-management.php
+#: includes/class-updater.php:72
+msgid "Comment Management"
+msgstr "댓글 관리"
+
+#. Plugin URI of the plugin
+#: comment-management.php
+msgid "https://github.com/fifoqueue/comment-management"
+msgstr "https://github.com/fifoqueue/comment-management"
+
+#. Description of the plugin
+#: comment-management.php
+msgid "Securely manage WordPress comments from the front end."
+msgstr "워드프레스 댓글을 프론트엔드에서 안전하게 관리합니다."
+
+#. Author of the plugin
+#: comment-management.php
+msgid "FiLo"
+msgstr "FiLo"
+
+#: includes/class-updater.php:71
+#: includes/class-updater.php:211
+msgid "Comment Management Updates"
+msgstr "댓글 관리 업데이트"
+
+#: includes/class-updater.php:95
+msgid "GitHub update source"
+msgstr "GitHub 업데이트 소스"
+
+#: includes/class-updater.php:102
+msgid "GitHub repository"
+msgstr "GitHub 저장소"
+
+#: includes/class-updater.php:110
+msgid "Stable branch"
+msgstr "안정 브랜치"
+
+#: includes/class-updater.php:118
+msgid "GitHub API token"
+msgstr "GitHub API 토큰"
+
+#: includes/class-updater.php:146
+msgid "Enter the repository as owner/name."
+msgstr "저장소를 owner/name 형식으로 입력하세요."
+
+#: includes/class-updater.php:166
+msgid "Enter a valid Git branch name."
+msgstr "유효한 Git 브랜치 이름을 입력하세요."
+
+#: includes/class-updater.php:186
+msgid "The GitHub API token contains invalid characters."
+msgstr "GitHub API 토큰에 유효하지 않은 문자가 포함되어 있습니다."
+
+#: includes/class-updater.php:230
+msgid "Plugin Update Checker uses this repository, branch, and optional token when checking GitHub for updates."
+msgstr "Plugin Update Checker는 GitHub 업데이트 확인 시 이 저장소, 브랜치 및 선택적 토큰을 사용합니다."
+
+#: includes/class-updater.php:248
+msgid "Format: owner/repository. Default: fifoqueue/comment-management."
+msgstr "형식: owner/repository. 기본값: fifoqueue/comment-management."
+
+#: includes/class-updater.php:263
+msgid "The production branch used when no newer GitHub Release is available."
+msgstr "더 새로운 GitHub 릴리스가 없을 때 사용할 운영 브랜치입니다."
+
+#: includes/class-updater.php:278
+msgid "Optional. Use a fine-grained read-only token for private repositories or higher GitHub API limits. Leave blank to keep the saved token."
+msgstr "선택 사항입니다. 비공개 저장소 또는 더 높은 GitHub API 한도가 필요하면 세분화된 읽기 전용 토큰을 사용하세요. 저장된 토큰을 유지하려면 비워 두세요."
+
+#: includes/class-updater.php:288
+msgid "Remove the saved token"
+msgstr "저장된 토큰 삭제"
