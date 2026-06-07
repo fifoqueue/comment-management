@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 final class Comment_Action_Service {
 	private const HISTORY_META_KEY = '_comment_management_edit_history';
 	private const HISTORY_LIMIT    = 20;
-	private const UNDO_PREFIX      = 'comment_management_undo_';
+	private const UNDO_META_KEY    = '_comment_management_undo_tokens';
 	private const UNDO_TTL         = 300;
 
 	/**
@@ -285,18 +285,32 @@ final class Comment_Action_Service {
 		string $action,
 		string $previous_status
 	): string {
-		$token = wp_generate_password( 32, false, false );
-
-		set_transient(
-			self::UNDO_PREFIX . hash( 'sha256', $token ),
-			array(
-				'user_id'         => get_current_user_id(),
-				'comment_id'      => $comment->comment_ID,
-				'action'          => $action,
-				'previous_status' => $previous_status,
-			),
-			self::UNDO_TTL
+		$token  = wp_generate_password( 32, false, false );
+		$tokens = get_comment_meta(
+			$comment->comment_ID,
+			self::UNDO_META_KEY,
+			true
 		);
+		$tokens = is_array( $tokens ) ? $tokens : array();
+		$now    = time();
+		$tokens = array_filter(
+			$tokens,
+			static fn ( mixed $data ): bool => (
+				is_array( $data )
+				&& isset( $data['expires_at'] )
+				&& $now <= (int) $data['expires_at']
+			)
+		);
+
+		$tokens[ hash( 'sha256', $token ) ] = array(
+			'user_id'         => get_current_user_id(),
+			'comment_id'      => $comment->comment_ID,
+			'action'          => $action,
+			'previous_status' => $previous_status,
+			'expires_at'      => $now + self::UNDO_TTL,
+		);
+
+		update_comment_meta( $comment->comment_ID, self::UNDO_META_KEY, $tokens );
 
 		return $token;
 	}
@@ -316,21 +330,42 @@ final class Comment_Action_Service {
 			);
 		}
 
-		$key  = self::UNDO_PREFIX . hash( 'sha256', $token );
-		$data = get_transient( $key );
+		$key    = hash( 'sha256', $token );
+		$tokens = get_comment_meta(
+			$comment->comment_ID,
+			self::UNDO_META_KEY,
+			true
+		);
+		$data   = is_array( $tokens ) && isset( $tokens[ $key ] )
+			? $tokens[ $key ]
+			: null;
 
 		if (
 			! is_array( $data )
+			|| ! isset(
+				$data['user_id'],
+				$data['comment_id'],
+				$data['action'],
+				$data['previous_status'],
+				$data['expires_at']
+			)
 			|| get_current_user_id() !== (int) $data['user_id']
 			|| (int) $data['comment_id'] !== $comment->comment_ID
+			|| time() > (int) $data['expires_at']
 		) {
+			if ( is_array( $tokens ) && isset( $tokens[ $key ] ) ) {
+				unset( $tokens[ $key ] );
+				$this->store_undo_tokens( $comment->comment_ID, $tokens );
+			}
+
 			return new \WP_Error(
 				'comment_management_invalid_undo',
 				__( 'The undo request is invalid or has expired.', 'comment-management' )
 			);
 		}
 
-		delete_transient( $key );
+		unset( $tokens[ $key ] );
+		$this->store_undo_tokens( $comment->comment_ID, $tokens );
 
 		$result = match ( $data['action'] ) {
 			'trash'     => wp_untrash_comment( $comment ),
@@ -360,5 +395,20 @@ final class Comment_Action_Service {
 			'removed'    => false,
 			'status'     => (string) $data['previous_status'],
 		);
+	}
+
+	/**
+	 * Store or remove the undo-token collection for a comment.
+	 *
+	 * @param int                  $comment_id Comment ID.
+	 * @param array<string, mixed> $tokens     Token data keyed by token hash.
+	 */
+	private function store_undo_tokens( int $comment_id, array $tokens ): void {
+		if ( array() === $tokens ) {
+			delete_comment_meta( $comment_id, self::UNDO_META_KEY );
+			return;
+		}
+
+		update_comment_meta( $comment_id, self::UNDO_META_KEY, $tokens );
 	}
 }

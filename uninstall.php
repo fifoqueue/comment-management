@@ -15,3 +15,10 @@ delete_metadata(
 	'',
 	true
 );
+delete_metadata(
+	'comment',
+	0,
+	'_comment_management_undo_tokens',
+	'',
+	true
+);

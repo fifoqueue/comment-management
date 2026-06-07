@@ -183,6 +183,11 @@ namespace FiLo\CommentManagement {
 		return true;
 	}
 
+	function delete_comment_meta( int $comment_id, string $key ): bool {
+		unset( Test_State::$comment_meta[ $comment_id ][ $key ] );
+		return true;
+	}
+
 	function set_transient( string $key, mixed $value, int $expiration ): bool {
 		unset( $expiration );
 		Test_State::$transients[ $key ] = $value;
