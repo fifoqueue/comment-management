@@ -191,7 +191,11 @@ final class Frontend_Controller {
 			? sanitize_key( wp_unslash( $_POST['renderer'] ) )
 			: 'default';
 		$reference    = isset( $_POST['reference'] ) && is_string( $_POST['reference'] )
-			? sanitize_text_field( wp_unslash( $_POST['reference'] ) )
+			? preg_replace(
+				'/[^A-Za-z0-9_.-]/',
+				'',
+				sanitize_text_field( wp_unslash( $_POST['reference'] ) )
+			)
 			: null;
 
 		if (

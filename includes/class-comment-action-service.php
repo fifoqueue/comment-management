@@ -314,7 +314,10 @@ final class Comment_Action_Service {
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	private function undo_action( \WP_Comment $comment, string $token ): array|\WP_Error {
-		if ( '' === $token ) {
+		if (
+			'' === $token
+			|| 1 !== preg_match( '/\A[A-Za-z0-9_-]+\.[a-f0-9]{64}\z/', $token )
+		) {
 			return new \WP_Error(
 				'comment_management_invalid_undo',
 				__( 'The undo request is invalid or has expired.', 'comment-management' )
@@ -356,7 +359,11 @@ final class Comment_Action_Service {
 			|| get_current_user_id() !== (int) $data['user_id']
 			|| (int) $data['comment_id'] !== $comment->comment_ID
 			|| time() > (int) $data['expires_at']
-			|| ! $this->has_expected_undo_status( $comment, (string) $data['action'] )
+			|| ! in_array( $data['action'], array( 'trash', 'spam', 'unapprove' ), true )
+			|| $this->statuses_match(
+				(string) $comment->comment_approved,
+				(string) $data['previous_status']
+			)
 		) {
 			return new \WP_Error(
 				'comment_management_invalid_undo',
@@ -364,16 +371,11 @@ final class Comment_Action_Service {
 			);
 		}
 
-		$result = match ( $data['action'] ) {
-			'trash'     => wp_untrash_comment( $comment ),
-			'spam'      => wp_unspam_comment( $comment ),
-			'unapprove' => wp_set_comment_status(
-				$comment,
-				'1' === (string) $data['previous_status'] ? 'approve' : 'hold',
-				true
-			),
-			default     => false,
-		};
+		$result = wp_set_comment_status(
+			$comment,
+			$this->normalize_status_for_update( (string) $data['previous_status'] ),
+			true
+		);
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
@@ -395,20 +397,28 @@ final class Comment_Action_Service {
 	}
 
 	/**
-	 * Check that the original moderation action is still in effect.
+	 * Compare WordPress's numeric and named comment status representations.
 	 *
-	 * @param \WP_Comment $comment Comment object.
-	 * @param string      $action  Original action.
+	 * @param string $first  First status.
+	 * @param string $second Second status.
 	 * @return bool
 	 */
-	private function has_expected_undo_status( \WP_Comment $comment, string $action ): bool {
-		$status = (string) $comment->comment_approved;
+	private function statuses_match( string $first, string $second ): bool {
+		return $this->normalize_status_for_update( $first )
+			=== $this->normalize_status_for_update( $second );
+	}
 
-		return match ( $action ) {
-			'trash'     => 'trash' === $status,
-			'spam'      => 'spam' === $status,
-			'unapprove' => in_array( $status, array( '0', 'hold' ), true ),
-			default     => false,
+	/**
+	 * Normalize a stored comment status for wp_set_comment_status().
+	 *
+	 * @param string $status Stored status.
+	 * @return string
+	 */
+	private function normalize_status_for_update( string $status ): string {
+		return match ( $status ) {
+			'1', 'approve', 'approved' => 'approve',
+			'0', 'hold', 'unapproved'  => 'hold',
+			default                    => $status,
 		};
 	}
 }

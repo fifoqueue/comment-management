@@ -114,7 +114,7 @@ final class CommentActionServiceTest extends TestCase {
 		);
 
 		self::assertIsArray( $undone );
-		self::assertSame( '1', Test_State::$comment->comment_approved );
+		self::assertSame( 'approve', Test_State::$comment->comment_approved );
 
 		$reused = $this->service->execute(
 			42,
