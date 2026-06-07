@@ -73,9 +73,14 @@ final class Frontend_Controller {
 				'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
 				'strings' => array(
 					'confirmDelete' => __( 'Permanently delete this comment? This cannot be undone.', 'comment-management' ),
+					'historyEmpty'  => __( 'No edit history is available.', 'comment-management' ),
+					'historyTitle'  => __( 'Comment edit history', 'comment-management' ),
 					'requestFailed' => __( 'The request failed. Please try again.', 'comment-management' ),
+					'restore'       => __( 'Restore', 'comment-management' ),
 					'saving'        => __( 'Saving...', 'comment-management' ),
 					'working'       => __( 'Working...', 'comment-management' ),
+					'undo'          => __( 'Undo', 'comment-management' ),
+					'undoExpired'   => __( 'The undo period has ended.', 'comment-management' ),
 				),
 			)
 		);
@@ -93,8 +98,6 @@ final class Frontend_Controller {
 	 * @return string
 	 */
 	public function append_controls( string $text, mixed $comment = null, mixed $args = array() ): string {
-		unset( $args );
-
 		if (
 			$this->rendering_response
 			|| ( is_admin() && ! wp_doing_ajax() )
@@ -186,6 +189,9 @@ final class Frontend_Controller {
 		$renderer     = isset( $_POST['renderer'] ) && is_string( $_POST['renderer'] )
 			? sanitize_key( wp_unslash( $_POST['renderer'] ) )
 			: 'default';
+		$reference    = isset( $_POST['reference'] ) && is_string( $_POST['reference'] )
+			? sanitize_text_field( wp_unslash( $_POST['reference'] ) )
+			: null;
 
 		if (
 			'delete' === $operation
@@ -197,7 +203,12 @@ final class Frontend_Controller {
 			);
 		}
 
-		$result = $this->service->execute( $comment_id, $operation, $content );
+		$result = $this->service->execute(
+			$comment_id,
+			$operation,
+			$content,
+			$reference
+		);
 
 		if ( is_wp_error( $result ) ) {
 			$status = 'comment_management_forbidden' === $result->get_error_code() ? 403 : 400;
@@ -210,9 +221,19 @@ final class Frontend_Controller {
 			'removed'     => $result['removed'],
 			'message'     => $this->get_success_message( $result['action'] ),
 			'contentHtml' => '',
+			'contentRaw'  => '',
+			'history'     => $result['history'] ?? array(),
+			'status'      => $result['status'] ?? '',
+			'statusLabel' => isset( $result['status'] )
+				? $this->get_status_label( (string) $result['status'] )
+				: '',
+			'undoToken'   => $result['undo_token'] ?? '',
 		);
 
-		if ( 'edit' === $result['action'] && $result['comment'] instanceof \WP_Comment ) {
+		if (
+			in_array( $result['action'], array( 'edit', 'restore_revision' ), true )
+			&& $result['comment'] instanceof \WP_Comment
+		) {
 			$this->rendering_response = true;
 
 			try {
@@ -229,6 +250,7 @@ final class Frontend_Controller {
 			}
 
 			$response['contentHtml'] = wp_kses_post( (string) $content_html );
+			$response['contentRaw']  = $result['comment']->comment_content;
 		}
 
 		wp_send_json_success( $response );
@@ -242,32 +264,50 @@ final class Frontend_Controller {
 	 * @return string
 	 */
 	private function render_controls( \WP_Comment $comment, string $renderer ): string {
-		$comment_id = (int) $comment->comment_ID;
+		$comment_id   = (int) $comment->comment_ID;
+		$status       = (string) $comment->comment_approved;
+		$status_label = $this->get_status_label( $status );
 
 		return sprintf(
 			'<div class="cm-controls" data-comment-management-controls data-comment-id="%1$d" data-content="%2$s" data-renderer="%3$s">
-				<div class="cm-actions" role="group" aria-label="%4$s">
-					<button type="button" class="cm-action" data-operation="edit">%5$s</button>
-					<button type="button" class="cm-action" data-operation="unapprove">%6$s</button>
-					<button type="button" class="cm-action" data-operation="spam">%7$s</button>
-					<button type="button" class="cm-action" data-operation="trash">%8$s</button>
-					<button type="button" class="cm-action cm-action-danger" data-operation="delete">%9$s</button>
-				</div>
-				<div class="cm-editor" hidden>
-					<label class="screen-reader-text" for="cm-content-%1$d">%10$s</label>
-					<textarea id="cm-content-%1$d" class="cm-editor-content" rows="5"></textarea>
-					<div class="cm-editor-actions">
-						<button type="button" class="cm-save">%11$s</button>
-						<button type="button" class="cm-cancel">%12$s</button>
+				<div class="cm-controls-header">
+					<span class="cm-status-badge" data-comment-status="%4$s"%5$s>%6$s</span>
+					<div class="cm-menu">
+						<button type="button" class="cm-menu-toggle" aria-expanded="false" aria-haspopup="menu" aria-controls="cm-menu-%1$d">
+							<span aria-hidden="true">&#8942;</span>
+							<span class="screen-reader-text">%8$s</span>
+						</button>
+						<div id="cm-menu-%1$d" class="cm-actions" role="menu" aria-label="%7$s" hidden>
+							<button type="button" class="cm-action" role="menuitem" data-operation="edit">%9$s</button>
+							<button type="button" class="cm-action" role="menuitem" data-operation="history">%10$s</button>
+							<button type="button" class="cm-action" role="menuitem" data-operation="unapprove">%11$s</button>
+							<button type="button" class="cm-action" role="menuitem" data-operation="spam">%12$s</button>
+							<button type="button" class="cm-action" role="menuitem" data-operation="trash">%13$s</button>
+							<button type="button" class="cm-action cm-action-danger" role="menuitem" data-operation="delete">%14$s</button>
+						</div>
 					</div>
 				</div>
+				<div class="cm-editor" hidden>
+					<label class="screen-reader-text" for="cm-content-%1$d">%15$s</label>
+					<textarea id="cm-content-%1$d" class="cm-editor-content" rows="5"></textarea>
+					<div class="cm-editor-actions">
+						<button type="button" class="cm-save">%16$s</button>
+						<button type="button" class="cm-cancel">%17$s</button>
+					</div>
+				</div>
+				<div class="cm-history" hidden></div>
 				<p class="cm-status" role="status" aria-live="polite"></p>
 			</div>',
 			$comment_id,
 			esc_attr( $comment->comment_content ),
 			esc_attr( $renderer ),
+			esc_attr( $status ),
+			'' === $status_label ? ' hidden' : '',
+			esc_html( $status_label ),
 			esc_attr__( 'Comment management actions', 'comment-management' ),
+			esc_html__( 'More comment actions', 'comment-management' ),
 			esc_html__( 'Edit', 'comment-management' ),
+			esc_html__( 'History', 'comment-management' ),
 			esc_html__( 'Unapprove', 'comment-management' ),
 			esc_html__( 'Mark as spam', 'comment-management' ),
 			esc_html__( 'Move to Trash', 'comment-management' ),
@@ -300,12 +340,30 @@ final class Frontend_Controller {
 	 */
 	private function get_success_message( string $action ): string {
 		return match ( $action ) {
-			'trash'     => __( 'The comment was moved to the Trash.', 'comment-management' ),
-			'spam'      => __( 'The comment was marked as spam.', 'comment-management' ),
-			'unapprove' => __( 'The comment was unapproved.', 'comment-management' ),
-			'edit'      => __( 'The comment was updated.', 'comment-management' ),
-			'delete'    => __( 'The comment was permanently deleted.', 'comment-management' ),
-			default     => __( 'The comment was updated.', 'comment-management' ),
+			'trash'            => __( 'The comment was moved to the Trash.', 'comment-management' ),
+			'spam'             => __( 'The comment was marked as spam.', 'comment-management' ),
+			'unapprove'        => __( 'The comment was unapproved.', 'comment-management' ),
+			'edit'             => __( 'The comment was updated.', 'comment-management' ),
+			'delete'           => __( 'The comment was permanently deleted.', 'comment-management' ),
+			'history'          => '',
+			'restore_revision' => __( 'The comment revision was restored.', 'comment-management' ),
+			'undo'             => __( 'The comment action was undone.', 'comment-management' ),
+			default            => __( 'The comment was updated.', 'comment-management' ),
+		};
+	}
+
+	/**
+	 * Get a human-readable comment status.
+	 *
+	 * @param string $status Comment status.
+	 * @return string
+	 */
+	private function get_status_label( string $status ): string {
+		return match ( $status ) {
+			'hold', 'unapprove' => __( 'Pending', 'comment-management' ),
+			'spam'              => __( 'Spam', 'comment-management' ),
+			'trash'             => __( 'Trash', 'comment-management' ),
+			default             => '',
 		};
 	}
 }

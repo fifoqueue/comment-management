@@ -1,10 +1,10 @@
 === Comment Management ===
 Contributors: fifoqueue
-Tags: comments, moderation, wpdiscuz, frontend, wp-cli
+Tags: comments, moderation, wpdiscuz, frontend
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.0.2
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,16 +21,16 @@ Supported actions:
 * Mark a comment as spam.
 * Unapprove a comment.
 * Permanently delete a comment after confirmation.
+* Undo Trash, spam, and unapprove operations for a short period.
+* Display the new moderation status immediately.
+* Review and restore the latest 20 comment edits.
 
 Every browser request requires an authenticated session, a valid nonce, and the `edit_comment` capability for the specific comment. Edited content is restricted to WordPress's allowed post HTML.
 
-WP-CLI examples:
-
-`wp comment-management spam 42`
-
-`wp comment-management edit 42 --content="Updated comment"`
-
-`wp comment-management delete 42 --yes`
+After moderation, the plugin reloads the comment area from the server so comment
+counts, empty-state markup, separators, and forms stay in sync with the active
+theme. wpDiscuz pages use a full refresh after the undo period to preserve its
+internal JavaScript state.
 
 Updates are delivered from GitHub Releases through Plugin Update Checker.
 
@@ -62,6 +62,15 @@ Only logged-in users who can edit the specific comment. Assets are limited to us
 
 == Changelog ==
 
+= 1.1.0 =
+
+* Removed the redundant custom WP-CLI comment command.
+* Added a time-limited undo action for Trash, spam, and unapprove operations.
+* Added immediate comment status badges before the comment area is refreshed.
+* Added a 20-entry comment edit history with revision restoration.
+* Re-rendered the comment area after moderation to keep surrounding theme markup in sync.
+* Moved comment management actions into an accessible overflow menu.
+
 = 1.0.2 =
 
 * Matched the inline comment editor textarea to the active theme's comment form styling.
@@ -75,5 +84,4 @@ Only logged-in users who can edit the specific comment. Assets are limited to us
 
 * Initial release.
 * Added secure front-end edit, Trash, spam, unapprove, and permanent delete actions.
-* Added WP-CLI support.
 * Added GitHub release updates through Plugin Update Checker 5.7.

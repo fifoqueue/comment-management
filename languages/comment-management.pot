@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Comment Management 1.0.2\n"
-"Report-Msgid-Bugs-To: https://github.com/fifoqueue/comment-management/issues\n"
+"Project-Id-Version: Comment Management 1.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/comment-management\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: \n"
+"POT-Creation-Date: 2026-06-07T08:11:39+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: comment-management\n"
@@ -35,24 +35,41 @@ msgstr ""
 msgid "FiLo"
 msgstr ""
 
-#: includes/class-comment-action-service.php:43
+#: includes/class-comment-action-service.php:57
 msgid "This comment action is not supported."
 msgstr ""
 
-#: includes/class-comment-action-service.php:52
+#: includes/class-comment-action-service.php:66
 msgid "The comment could not be found."
 msgstr ""
 
-#: includes/class-comment-action-service.php:65
+#: includes/class-comment-action-service.php:76
 msgid "You are not allowed to manage this comment."
 msgstr ""
 
-#: includes/class-comment-action-service.php:84
+#: includes/class-comment-action-service.php:113
 msgid "WordPress could not update the comment."
 msgstr ""
 
-#: includes/class-comment-action-service.php:109
+#: includes/class-comment-action-service.php:151
 msgid "Comment content cannot be empty."
+msgstr ""
+
+#: includes/class-comment-action-service.php:206
+msgid "Unknown user"
+msgstr ""
+
+#: includes/class-comment-action-service.php:236
+msgid "The selected comment revision could not be found."
+msgstr ""
+
+#: includes/class-comment-action-service.php:315
+#: includes/class-comment-action-service.php:329
+msgid "The undo request is invalid or has expired."
+msgstr ""
+
+#: includes/class-comment-action-service.php:353
+msgid "WordPress could not undo the comment action."
 msgstr ""
 
 #: includes/class-frontend-controller.php:75
@@ -60,84 +77,132 @@ msgid "Permanently delete this comment? This cannot be undone."
 msgstr ""
 
 #: includes/class-frontend-controller.php:76
-msgid "The request failed. Please try again."
+msgid "No edit history is available."
 msgstr ""
 
 #: includes/class-frontend-controller.php:77
-msgid "Saving..."
+msgid "Comment edit history"
 msgstr ""
 
 #: includes/class-frontend-controller.php:78
+msgid "The request failed. Please try again."
+msgstr ""
+
+#: includes/class-frontend-controller.php:79
+msgid "Restore"
+msgstr ""
+
+#: includes/class-frontend-controller.php:80
+msgid "Saving..."
+msgstr ""
+
+#: includes/class-frontend-controller.php:81
 msgid "Working..."
 msgstr ""
 
-#: includes/class-frontend-controller.php:162
+#: includes/class-frontend-controller.php:82
+msgid "Undo"
+msgstr ""
+
+#: includes/class-frontend-controller.php:83
+msgid "The undo period has ended."
+msgstr ""
+
+#: includes/class-frontend-controller.php:165
 msgid "You must be logged in."
 msgstr ""
 
-#: includes/class-frontend-controller.php:169
+#: includes/class-frontend-controller.php:172
 msgid "The security token is invalid or has expired."
 msgstr ""
 
-#: includes/class-frontend-controller.php:195
+#: includes/class-frontend-controller.php:201
 msgid "Permanent deletion was not confirmed."
 msgstr ""
 
-#: includes/class-frontend-controller.php:269
+#: includes/class-frontend-controller.php:307
 msgid "Comment management actions"
 msgstr ""
 
-#: includes/class-frontend-controller.php:270
+#: includes/class-frontend-controller.php:308
+msgid "More comment actions"
+msgstr ""
+
+#: includes/class-frontend-controller.php:309
 msgid "Edit"
 msgstr ""
 
-#: includes/class-frontend-controller.php:271
+#: includes/class-frontend-controller.php:310
+msgid "History"
+msgstr ""
+
+#: includes/class-frontend-controller.php:311
 msgid "Unapprove"
 msgstr ""
 
-#: includes/class-frontend-controller.php:272
+#: includes/class-frontend-controller.php:312
 msgid "Mark as spam"
 msgstr ""
 
-#: includes/class-frontend-controller.php:273
+#: includes/class-frontend-controller.php:313
 msgid "Move to Trash"
 msgstr ""
 
-#: includes/class-frontend-controller.php:274
+#: includes/class-frontend-controller.php:314
 msgid "Delete permanently"
 msgstr ""
 
-#: includes/class-frontend-controller.php:275
+#: includes/class-frontend-controller.php:315
 msgid "Comment content"
 msgstr ""
 
-#: includes/class-frontend-controller.php:276
+#: includes/class-frontend-controller.php:316
 msgid "Save"
 msgstr ""
 
-#: includes/class-frontend-controller.php:277
+#: includes/class-frontend-controller.php:317
 msgid "Cancel"
 msgstr ""
 
-#: includes/class-frontend-controller.php:303
+#: includes/class-frontend-controller.php:343
 msgid "The comment was moved to the Trash."
 msgstr ""
 
-#: includes/class-frontend-controller.php:304
+#: includes/class-frontend-controller.php:344
 msgid "The comment was marked as spam."
 msgstr ""
 
-#: includes/class-frontend-controller.php:305
+#: includes/class-frontend-controller.php:345
 msgid "The comment was unapproved."
 msgstr ""
 
-#: includes/class-frontend-controller.php:306
-#: includes/class-frontend-controller.php:308
+#: includes/class-frontend-controller.php:346
+#: includes/class-frontend-controller.php:351
 msgid "The comment was updated."
 msgstr ""
 
-#: includes/class-frontend-controller.php:307
+#: includes/class-frontend-controller.php:347
 msgid "The comment was permanently deleted."
+msgstr ""
+
+#: includes/class-frontend-controller.php:349
+msgid "The comment revision was restored."
+msgstr ""
+
+#: includes/class-frontend-controller.php:350
+msgid "The comment action was undone."
+msgstr ""
+
+#: includes/class-frontend-controller.php:363
+msgid "Pending"
+msgstr ""
+
+#: includes/class-frontend-controller.php:364
+msgid "Spam"
+msgstr ""
+
+#: includes/class-frontend-controller.php:365
+msgid "Trash"
 msgstr ""
 
 #: includes/class-updater.php:71

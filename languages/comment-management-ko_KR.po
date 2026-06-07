@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Comment Management 1.0.2\n"
+"Project-Id-Version: Comment Management 1.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/fifoqueue/comment-management/issues\n"
 "Last-Translator: FiLo\n"
 "Language-Team: Korean\n"
@@ -13,23 +13,23 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Domain: comment-management\n"
 
-#: includes/class-comment-action-service.php:43
+#: includes/class-comment-action-service.php:57
 msgid "This comment action is not supported."
 msgstr "지원하지 않는 댓글 작업입니다."
 
-#: includes/class-comment-action-service.php:52
+#: includes/class-comment-action-service.php:66
 msgid "The comment could not be found."
 msgstr "댓글을 찾을 수 없습니다."
 
-#: includes/class-comment-action-service.php:65
+#: includes/class-comment-action-service.php:76
 msgid "You are not allowed to manage this comment."
 msgstr "이 댓글을 관리할 권한이 없습니다."
 
-#: includes/class-comment-action-service.php:84
+#: includes/class-comment-action-service.php:113
 msgid "WordPress could not update the comment."
 msgstr "워드프레스에서 댓글을 변경하지 못했습니다."
 
-#: includes/class-comment-action-service.php:109
+#: includes/class-comment-action-service.php:151
 msgid "Comment content cannot be empty."
 msgstr "댓글 내용은 비워 둘 수 없습니다."
 
@@ -37,84 +37,84 @@ msgstr "댓글 내용은 비워 둘 수 없습니다."
 msgid "Permanently delete this comment? This cannot be undone."
 msgstr "이 댓글을 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
 
-#: includes/class-frontend-controller.php:76
+#: includes/class-frontend-controller.php:78
 msgid "The request failed. Please try again."
 msgstr "요청에 실패했습니다. 다시 시도해 주세요."
 
-#: includes/class-frontend-controller.php:77
+#: includes/class-frontend-controller.php:80
 msgid "Saving..."
 msgstr "저장 중..."
 
-#: includes/class-frontend-controller.php:78
+#: includes/class-frontend-controller.php:81
 msgid "Working..."
 msgstr "처리 중..."
 
-#: includes/class-frontend-controller.php:162
+#: includes/class-frontend-controller.php:165
 msgid "You must be logged in."
 msgstr "로그인이 필요합니다."
 
-#: includes/class-frontend-controller.php:169
+#: includes/class-frontend-controller.php:172
 msgid "The security token is invalid or has expired."
 msgstr "보안 토큰이 유효하지 않거나 만료되었습니다."
 
-#: includes/class-frontend-controller.php:195
+#: includes/class-frontend-controller.php:201
 msgid "Permanent deletion was not confirmed."
 msgstr "영구 삭제가 확인되지 않았습니다."
 
-#: includes/class-frontend-controller.php:269
+#: includes/class-frontend-controller.php:307
 msgid "Comment management actions"
 msgstr "댓글 관리 작업"
 
-#: includes/class-frontend-controller.php:270
+#: includes/class-frontend-controller.php:309
 msgid "Edit"
 msgstr "수정"
 
-#: includes/class-frontend-controller.php:271
+#: includes/class-frontend-controller.php:311
 msgid "Unapprove"
 msgstr "비승인"
 
-#: includes/class-frontend-controller.php:272
+#: includes/class-frontend-controller.php:312
 msgid "Mark as spam"
 msgstr "스팸 처리"
 
-#: includes/class-frontend-controller.php:273
+#: includes/class-frontend-controller.php:313
 msgid "Move to Trash"
 msgstr "휴지통으로 이동"
 
-#: includes/class-frontend-controller.php:274
+#: includes/class-frontend-controller.php:314
 msgid "Delete permanently"
 msgstr "영구 삭제"
 
-#: includes/class-frontend-controller.php:275
+#: includes/class-frontend-controller.php:315
 msgid "Comment content"
 msgstr "댓글 내용"
 
-#: includes/class-frontend-controller.php:276
+#: includes/class-frontend-controller.php:316
 msgid "Save"
 msgstr "저장"
 
-#: includes/class-frontend-controller.php:277
+#: includes/class-frontend-controller.php:317
 msgid "Cancel"
 msgstr "취소"
 
-#: includes/class-frontend-controller.php:303
+#: includes/class-frontend-controller.php:343
 msgid "The comment was moved to the Trash."
 msgstr "댓글을 휴지통으로 이동했습니다."
 
-#: includes/class-frontend-controller.php:304
+#: includes/class-frontend-controller.php:344
 msgid "The comment was marked as spam."
 msgstr "댓글을 스팸으로 처리했습니다."
 
-#: includes/class-frontend-controller.php:305
+#: includes/class-frontend-controller.php:345
 msgid "The comment was unapproved."
 msgstr "댓글을 비승인 처리했습니다."
 
-#: includes/class-frontend-controller.php:306
-#: includes/class-frontend-controller.php:308
+#: includes/class-frontend-controller.php:346
+#: includes/class-frontend-controller.php:351
 msgid "The comment was updated."
 msgstr "댓글을 수정했습니다."
 
-#: includes/class-frontend-controller.php:307
+#: includes/class-frontend-controller.php:347
 msgid "The comment was permanently deleted."
 msgstr "댓글을 영구 삭제했습니다."
 
@@ -195,3 +195,68 @@ msgstr "선택 사항입니다. 비공개 저장소 또는 더 높은 GitHub API
 #: includes/class-updater.php:288
 msgid "Remove the saved token"
 msgstr "저장된 토큰 삭제"
+
+#: includes/class-comment-action-service.php:206
+msgid "Unknown user"
+msgstr "알 수 없는 사용자"
+
+#: includes/class-comment-action-service.php:236
+msgid "The selected comment revision could not be found."
+msgstr "선택한 댓글 수정 이력을 찾을 수 없습니다."
+
+#: includes/class-comment-action-service.php:315
+#: includes/class-comment-action-service.php:329
+msgid "The undo request is invalid or has expired."
+msgstr "실행 취소 요청이 유효하지 않거나 만료되었습니다."
+
+#: includes/class-comment-action-service.php:353
+msgid "WordPress could not undo the comment action."
+msgstr "워드프레스에서 댓글 작업을 실행 취소하지 못했습니다."
+
+#: includes/class-frontend-controller.php:76
+msgid "No edit history is available."
+msgstr "사용 가능한 수정 이력이 없습니다."
+
+#: includes/class-frontend-controller.php:77
+msgid "Comment edit history"
+msgstr "댓글 수정 이력"
+
+#: includes/class-frontend-controller.php:79
+msgid "Restore"
+msgstr "복원"
+
+#: includes/class-frontend-controller.php:82
+msgid "Undo"
+msgstr "실행 취소"
+
+#: includes/class-frontend-controller.php:83
+msgid "The undo period has ended."
+msgstr "실행 취소 가능 시간이 끝났습니다."
+
+#: includes/class-frontend-controller.php:310
+msgid "History"
+msgstr "이력"
+
+#: includes/class-frontend-controller.php:349
+msgid "The comment revision was restored."
+msgstr "댓글 수정 이력을 복원했습니다."
+
+#: includes/class-frontend-controller.php:350
+msgid "The comment action was undone."
+msgstr "댓글 작업을 실행 취소했습니다."
+
+#: includes/class-frontend-controller.php:363
+msgid "Pending"
+msgstr "승인 대기"
+
+#: includes/class-frontend-controller.php:364
+msgid "Spam"
+msgstr "스팸"
+
+#: includes/class-frontend-controller.php:365
+msgid "Trash"
+msgstr "휴지통"
+
+#: includes/class-frontend-controller.php:308
+msgid "More comment actions"
+msgstr "댓글 작업 더 보기"

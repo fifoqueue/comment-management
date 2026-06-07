@@ -18,7 +18,7 @@ composer lint
 
 The distributable ZIP is built by `.github/workflows/release.yml` when a commit
 is pushed to `master`. The workflow
-creates a version tag such as `v1.0.1`, so the plugin version must be bumped
+creates a version tag such as `vX.Y.Z`, so the plugin version must be bumped
 before the next release.
 
 Update settings are available under **Settings > Comment Management**:
@@ -29,13 +29,3 @@ Update settings are available under **Settings > Comment Management**:
 
 Saved tokens are not rendered back into the settings form. Leaving the token
 field blank keeps the current value; the remove checkbox deletes it.
-
-## WP-CLI
-
-```bash
-wp comment-management trash 42
-wp comment-management spam 42
-wp comment-management unapprove 42
-wp comment-management edit 42 --content="Updated comment"
-wp comment-management delete 42 --yes
-```

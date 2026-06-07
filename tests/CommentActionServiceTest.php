@@ -65,15 +65,89 @@ final class CommentActionServiceTest extends TestCase {
 		);
 		self::assertSame( 'edit', $result['action'] );
 		self::assertFalse( $result['removed'] );
+		self::assertCount(
+			1,
+			Test_State::$comment_meta[42]['_comment_management_edit_history']
+		);
 	}
 
-	public function test_permanent_delete_can_run_in_cli_context(): void {
-		Test_State::$can_edit = false;
+	public function test_returns_and_restores_edit_history(): void {
+		$this->service->execute( 42, 'edit', 'Second version' );
 
-		$result = $this->service->execute( 42, 'delete', null, false );
+		$history = $this->service->execute( 42, 'history' );
+		self::assertSame( 'Original', $history['history'][0]['content'] );
 
-		self::assertIsArray( $result );
-		self::assertTrue( $result['removed'] );
+		$restored = $this->service->execute(
+			42,
+			'restore_revision',
+			null,
+			$history['history'][0]['id']
+		);
+
+		self::assertIsArray( $restored );
+		self::assertSame( 'Original', Test_State::$comment->comment_content );
+	}
+
+	public function test_edit_history_is_limited_to_twenty_revisions(): void {
+		for ( $index = 1; $index <= 21; ++$index ) {
+			$this->service->execute( 42, 'edit', 'Version ' . $index );
+		}
+
+		$history = $this->service->execute( 42, 'history' );
+
+		self::assertCount( 20, $history['history'] );
+		self::assertSame( 'Version 20', $history['history'][0]['content'] );
+		self::assertSame( 'Version 1', $history['history'][19]['content'] );
+	}
+
+	public function test_moderation_action_can_be_undone_once(): void {
+		$result = $this->service->execute( 42, 'trash' );
+
+		self::assertSame( 'trash', Test_State::$comment->comment_approved );
+		self::assertNotEmpty( $result['undo_token'] );
+
+		$undone = $this->service->execute(
+			42,
+			'undo',
+			null,
+			$result['undo_token']
+		);
+
+		self::assertIsArray( $undone );
+		self::assertSame( '1', Test_State::$comment->comment_approved );
+
+		$reused = $this->service->execute(
+			42,
+			'undo',
+			null,
+			$result['undo_token']
+		);
+		self::assertInstanceOf( \WP_Error::class, $reused );
+	}
+
+	public function test_unapprove_can_be_undone_to_approved_status(): void {
+		$result = $this->service->execute( 42, 'unapprove' );
+
+		self::assertSame( 'hold', Test_State::$comment->comment_approved );
+
+		$this->service->execute( 42, 'undo', null, $result['undo_token'] );
+
+		self::assertSame( 'approve', Test_State::$comment->comment_approved );
+	}
+
+	public function test_undo_token_is_bound_to_user(): void {
+		$result = $this->service->execute( 42, 'spam' );
+		Test_State::$current_user_id = 9;
+
+		$undone = $this->service->execute(
+			42,
+			'undo',
+			null,
+			$result['undo_token']
+		);
+
+		self::assertInstanceOf( \WP_Error::class, $undone );
+		self::assertSame( 'spam', Test_State::$comment->comment_approved );
 	}
 
 	public function test_returns_core_mutation_errors(): void {

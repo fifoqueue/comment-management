@@ -3,7 +3,7 @@
  * Plugin Name:       Comment Management
  * Plugin URI:        https://github.com/fifoqueue/comment-management
  * Description:       Securely manage WordPress comments from the front end.
- * Version:           1.0.2
+ * Version:           1.1.0
  * Requires at least: 6.5
  * Requires PHP:      8.3
  * Author:            FiLo
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'COMMENT_MANAGEMENT_VERSION', '1.0.2' );
+define( 'COMMENT_MANAGEMENT_VERSION', '1.1.0' );
 define( 'COMMENT_MANAGEMENT_FILE', __FILE__ );
 define( 'COMMENT_MANAGEMENT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'COMMENT_MANAGEMENT_URL', plugin_dir_url( __FILE__ ) );
@@ -34,10 +34,6 @@ require_once COMMENT_MANAGEMENT_PATH . 'includes/class-comment-action-service.ph
 require_once COMMENT_MANAGEMENT_PATH . 'includes/class-frontend-controller.php';
 require_once COMMENT_MANAGEMENT_PATH . 'includes/class-updater.php';
 
-if ( defined( 'WP_CLI' ) && WP_CLI ) {
-	require_once COMMENT_MANAGEMENT_PATH . 'includes/class-cli-command.php';
-}
-
 add_action(
 	'plugins_loaded',
 	static function (): void {
@@ -51,12 +47,5 @@ add_action(
 
 		( new \FiLo\CommentManagement\Frontend_Controller( $service ) )->register();
 		( new \FiLo\CommentManagement\Updater() )->register();
-
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			\WP_CLI::add_command(
-				'comment-management',
-				new \FiLo\CommentManagement\Cli_Command( $service )
-			);
-		}
 	}
 );

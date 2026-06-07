@@ -28,10 +28,21 @@ namespace {
 	class WP_Comment {
 		public int $comment_ID;
 		public string $comment_content;
+		public string $comment_approved;
 
-		public function __construct( int $comment_id, string $comment_content = 'Original' ) {
+		public function __construct(
+			int $comment_id,
+			string $comment_content = 'Original',
+			string $comment_approved = '1'
+		) {
 			$this->comment_ID      = $comment_id;
 			$this->comment_content = $comment_content;
+			$this->comment_approved = $comment_approved;
+		}
+	}
+
+	class WP_User {
+		public function __construct( public string $display_name ) {
 		}
 	}
 }
@@ -45,6 +56,9 @@ namespace FiLo\CommentManagement {
 		public static ?array $updated_comment = null;
 		public static array $options = array();
 		public static array $settings_errors = array();
+		public static array $comment_meta = array();
+		public static array $transients = array();
+		public static int $current_user_id = 7;
 
 		public static function reset(): void {
 			self::$comment         = new \WP_Comment( 42 );
@@ -54,6 +68,9 @@ namespace FiLo\CommentManagement {
 			self::$updated_comment = null;
 			self::$options         = array();
 			self::$settings_errors = array();
+			self::$comment_meta    = array();
+			self::$transients      = array();
+			self::$current_user_id = 7;
 		}
 	}
 
@@ -83,17 +100,28 @@ namespace FiLo\CommentManagement {
 	}
 
 	function wp_trash_comment( \WP_Comment $comment ): mixed {
-		unset( $comment );
+		$comment->comment_approved = 'trash';
 		return Test_State::$mutation_result;
 	}
 
 	function wp_spam_comment( \WP_Comment $comment ): mixed {
-		unset( $comment );
+		$comment->comment_approved = 'spam';
 		return Test_State::$mutation_result;
 	}
 
 	function wp_set_comment_status( \WP_Comment $comment, string $status, bool $wp_error ): mixed {
-		unset( $comment, $status, $wp_error );
+		unset( $wp_error );
+		$comment->comment_approved = $status;
+		return Test_State::$mutation_result;
+	}
+
+	function wp_untrash_comment( \WP_Comment $comment ): mixed {
+		$comment->comment_approved = '1';
+		return Test_State::$mutation_result;
+	}
+
+	function wp_unspam_comment( \WP_Comment $comment ): mixed {
+		$comment->comment_approved = '1';
 		return Test_State::$mutation_result;
 	}
 
@@ -124,6 +152,58 @@ namespace FiLo\CommentManagement {
 
 	function wp_unslash( mixed $value ): mixed {
 		return $value;
+	}
+
+	function wp_generate_uuid4(): string {
+		static $counter = 0;
+		++$counter;
+		return sprintf( '00000000-0000-4000-8000-%012d', $counter );
+	}
+
+	function wp_generate_password(
+		int $length = 12,
+		bool $special_chars = true,
+		bool $extra_special_chars = false
+	): string {
+		unset( $special_chars, $extra_special_chars );
+		return str_repeat( 'a', $length - 1 ) . 'b';
+	}
+
+	function get_current_user_id(): int {
+		return Test_State::$current_user_id;
+	}
+
+	function get_comment_meta( int $comment_id, string $key, bool $single = false ): mixed {
+		unset( $single );
+		return Test_State::$comment_meta[ $comment_id ][ $key ] ?? '';
+	}
+
+	function update_comment_meta( int $comment_id, string $key, mixed $value ): bool {
+		Test_State::$comment_meta[ $comment_id ][ $key ] = $value;
+		return true;
+	}
+
+	function set_transient( string $key, mixed $value, int $expiration ): bool {
+		unset( $expiration );
+		Test_State::$transients[ $key ] = $value;
+		return true;
+	}
+
+	function get_transient( string $key ): mixed {
+		return Test_State::$transients[ $key ] ?? false;
+	}
+
+	function delete_transient( string $key ): bool {
+		unset( Test_State::$transients[ $key ] );
+		return true;
+	}
+
+	function get_userdata( int $user_id ): \WP_User|false {
+		return $user_id > 0 ? new \WP_User( 'Administrator' ) : false;
+	}
+
+	function wp_date( string $format, int $timestamp ): string {
+		return gmdate( '' !== $format ? $format : 'Y-m-d H:i', $timestamp );
 	}
 
 	function get_option( string $option, mixed $default = false ): mixed {
