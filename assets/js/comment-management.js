@@ -19,6 +19,75 @@
 		status.classList.toggle( 'cm-status-error', isError );
 	};
 
+	const matchCommentTextareaStyle = ( textarea ) => {
+		const source = Array.from(
+			document.querySelectorAll(
+				'#commentform textarea[name="comment"], form.comment-form textarea[name="comment"], .wpd-form textarea, textarea[name="comment"]'
+			)
+		).find( ( candidate ) => (
+			candidate !== textarea &&
+			! candidate.closest( '[data-comment-management-controls]' )
+		) );
+
+		if ( ! source ) {
+			return;
+		}
+
+		const sourceStyle = window.getComputedStyle( source );
+		const properties = [
+			'appearance',
+			'background-color',
+			'background-image',
+			'background-position',
+			'background-repeat',
+			'background-size',
+			'border-bottom-color',
+			'border-bottom-style',
+			'border-bottom-width',
+			'border-left-color',
+			'border-left-style',
+			'border-left-width',
+			'border-right-color',
+			'border-right-style',
+			'border-right-width',
+			'border-top-color',
+			'border-top-style',
+			'border-top-width',
+			'border-radius',
+			'box-shadow',
+			'color',
+			'font-family',
+			'font-size',
+			'font-style',
+			'font-weight',
+			'letter-spacing',
+			'line-height',
+			'outline',
+			'padding-bottom',
+			'padding-left',
+			'padding-right',
+			'padding-top',
+			'resize',
+			'text-align',
+			'text-indent',
+			'text-transform',
+			'transition',
+		];
+
+		properties.forEach( ( property ) => {
+			textarea.style.setProperty(
+				property,
+				sourceStyle.getPropertyValue( property )
+			);
+		} );
+
+		const sourceHeight = Number.parseFloat( sourceStyle.height );
+
+		if ( Number.isFinite( sourceHeight ) && sourceHeight > 0 ) {
+			textarea.style.minHeight = sourceStyle.height;
+		}
+	};
+
 	const request = async ( controls, operation, content = null ) => {
 		const formData = new FormData();
 		formData.append( 'action', config.action );
@@ -106,6 +175,7 @@
 			const editor = controls.querySelector( '.cm-editor' );
 			const textarea = controls.querySelector( '.cm-editor-content' );
 			textarea.value = controls.dataset.content || '';
+			matchCommentTextareaStyle( textarea );
 			editor.hidden = false;
 			textarea.focus();
 			return;
