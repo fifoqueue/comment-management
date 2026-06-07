@@ -103,7 +103,6 @@ final class Frontend_Controller {
 			|| ( is_admin() && ! wp_doing_ajax() )
 			|| ! is_user_logged_in()
 			|| ! current_user_can( 'moderate_comments' )
-			|| $this->is_wpdiscuz_context( $args )
 			|| str_contains( $text, 'data-comment-management-controls' )
 		) {
 			return $text;
@@ -118,10 +117,12 @@ final class Frontend_Controller {
 			return $text;
 		}
 
+		$renderer = $this->is_wpdiscuz_context( $args ) ? 'wpdiscuz' : 'default';
+
 		return sprintf(
-			'<div class="cm-managed-content">%1$s</div>%2$s',
+			'<div class="cm-managed-comment"><div class="cm-managed-content">%1$s</div>%2$s</div>',
 			$text,
-			$this->render_controls( $comment, 'default' )
+			$this->render_controls( $comment, $renderer )
 		);
 	}
 

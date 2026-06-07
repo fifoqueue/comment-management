@@ -1,9 +1,20 @@
+.cm-managed-comment {
+	position: relative;
+}
+
+.cm-managed-content {
+	padding-right: 2.5rem;
+}
+
 .cm-controls {
-	clear: both;
-	margin-top: 0.75rem;
-	padding-top: 0.625rem;
-	border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+	position: relative;
+	min-height: 2rem;
 	font-size: 0.875rem;
+}
+
+.cm-managed-comment > .cm-controls {
+	position: static;
+	min-height: 0;
 }
 
 .cm-comment-moderated {
@@ -26,6 +37,10 @@
 }
 
 .cm-controls-header {
+	position: absolute;
+	z-index: 10;
+	top: 0;
+	right: 0;
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
