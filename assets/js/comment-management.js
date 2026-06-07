@@ -19,6 +19,43 @@
 		status.classList.toggle( 'cm-status-error', isError );
 	};
 
+	const resetMenuPosition = ( menu ) => {
+		menu.classList.remove( 'cm-actions-above' );
+		menu.style.removeProperty( '--cm-menu-shift-x' );
+		menu.style.removeProperty( 'max-height' );
+	};
+
+	const positionMenu = ( toggle, menu ) => {
+		const margin = 8;
+		const viewportWidth = document.documentElement.clientWidth;
+		const viewportHeight = document.documentElement.clientHeight;
+		const toggleRect = toggle.getBoundingClientRect();
+
+		resetMenuPosition( menu );
+
+		const availableBelow = viewportHeight - toggleRect.bottom - margin;
+		const availableAbove = toggleRect.top - margin;
+		const openAbove =
+			menu.scrollHeight > availableBelow &&
+			availableAbove > availableBelow;
+
+		menu.classList.toggle( 'cm-actions-above', openAbove );
+		menu.style.maxHeight = `${
+			Math.max( 0, ( openAbove ? availableAbove : availableBelow ) - 4 )
+		}px`;
+
+		const menuRect = menu.getBoundingClientRect();
+		let shiftX = 0;
+
+		if ( menuRect.left < margin ) {
+			shiftX = margin - menuRect.left;
+		} else if ( menuRect.right > viewportWidth - margin ) {
+			shiftX = viewportWidth - margin - menuRect.right;
+		}
+
+		menu.style.setProperty( '--cm-menu-shift-x', `${ shiftX }px` );
+	};
+
 	const closeMenus = ( except = null ) => {
 		document.querySelectorAll( '.cm-menu-toggle[aria-expanded="true"]' )
 			.forEach( ( toggle ) => {
@@ -33,6 +70,20 @@
 
 				if ( menu ) {
 					menu.hidden = true;
+					resetMenuPosition( menu );
+				}
+			} );
+	};
+
+	const repositionOpenMenus = () => {
+		document.querySelectorAll( '.cm-menu-toggle[aria-expanded="true"]' )
+			.forEach( ( toggle ) => {
+				const menu = document.getElementById(
+					toggle.getAttribute( 'aria-controls' )
+				);
+
+				if ( menu ) {
+					positionMenu( toggle, menu );
 				}
 			} );
 	};
@@ -388,7 +439,10 @@
 			menu.hidden = ! opening;
 
 			if ( opening ) {
+				positionMenu( toggle, menu );
 				menu.querySelector( '[role="menuitem"]' )?.focus();
+			} else {
+				resetMenuPosition( menu );
 			}
 			return;
 		}
@@ -553,4 +607,12 @@
 
 		items[ nextIndex ].focus();
 	} );
+
+	window.addEventListener( 'resize', repositionOpenMenus );
+	document.addEventListener( 'scroll', repositionOpenMenus, {
+		capture: true,
+		passive: true,
+	} );
+	window.visualViewport?.addEventListener( 'resize', repositionOpenMenus );
+	window.visualViewport?.addEventListener( 'scroll', repositionOpenMenus );
 }() );

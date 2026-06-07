@@ -4,7 +4,7 @@ Tags: comments, moderation, wpdiscuz, frontend
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.3
-Stable tag: 1.1.6
+Stable tag: 1.1.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -61,6 +61,10 @@ The plugin is compatible with wpDiscuz rendering paths that apply WordPress's st
 Only logged-in users who can edit the specific comment. Assets are limited to users with the `moderate_comments` capability.
 
 == Changelog ==
+
+= 1.1.7 =
+
+* Kept the comment action menu inside the viewport on mobile and narrow layouts.
 
 = 1.1.6 =
 
