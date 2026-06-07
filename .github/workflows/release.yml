@@ -1,0 +1,253 @@
+name: CI and Release
+
+"on":
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - "8.3"
+          - "8.4"
+          - "8.5"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6.0.3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@2.37.1
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Validate Composer metadata
+        run: composer validate --strict
+
+      - name: Run unit tests
+        run: composer test
+
+      - name: Check coding standards
+        if: matrix.php == '8.3'
+        run: composer lint
+
+      - name: Lint PHP files
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . \
+            -path './.git' -prune -o \
+            -path './vendor' -prune -o \
+            -path './build' -prune -o \
+            -path './dist' -prune -o \
+            -name '*.php' -print0 | xargs -0 -n 1 php -l
+
+  build:
+    name: Build release package
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      plugin_version: ${{ steps.metadata.outputs.plugin_version }}
+    env:
+      PLUGIN_DIR: comment-management
+      ZIP_NAME: comment-management.zip
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6.0.3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@2.37.1
+        with:
+          php-version: "8.3"
+          coverage: none
+          tools: composer, wp-cli:2.12.0
+
+      - name: Validate version metadata
+        id: metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          plugin_version="$(sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*//p' comment-management.php | head -n 1 | xargs)"
+          constant_version="$(sed -n "s/^define( 'COMMENT_MANAGEMENT_VERSION', '\([^']*\)' );/\1/p" comment-management.php | head -n 1 | xargs)"
+          stable_tag="$(sed -n 's/^Stable tag:[[:space:]]*//p' readme.txt | head -n 1 | xargs)"
+
+          if [[ -z "${plugin_version}" ]]; then
+            echo "Could not read the plugin Version header." >&2
+            exit 1
+          fi
+
+          if [[ "${plugin_version}" != "${constant_version}" || "${plugin_version}" != "${stable_tag}" ]]; then
+            echo "Version header, COMMENT_MANAGEMENT_VERSION, and Stable tag must match." >&2
+            exit 1
+          fi
+
+          if [[ ! "${plugin_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z]+)*$ ]]; then
+            echo "Invalid plugin version: ${plugin_version}" >&2
+            exit 1
+          fi
+
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" && "${GITHUB_REF_NAME}" != "v${plugin_version}" ]]; then
+            echo "Release tag ${GITHUB_REF_NAME} must equal v${plugin_version}." >&2
+            exit 1
+          fi
+
+          echo "plugin_version=${plugin_version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install production dependencies
+        run: |
+          composer validate --strict
+          composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      - name: Build translations
+        shell: bash
+        run: |
+          set -euo pipefail
+          wp i18n make-pot . languages/comment-management.pot \
+            --domain=comment-management \
+            --exclude=.github,.idea,build,dist,tests,vendor \
+            --headers='{"Report-Msgid-Bugs-To":"https://github.com/${{ github.repository }}/issues","POT-Creation-Date":""}'
+          wp i18n update-po languages/comment-management.pot languages/comment-management-ko_KR.po
+          wp i18n make-mo languages/comment-management-ko_KR.po languages/comment-management-ko_KR.mo
+          wp i18n make-php languages/comment-management-ko_KR.po languages
+
+      - name: Stamp GitHub repository metadata
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          RELEASE_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          php <<'PHP'
+          <?php
+          $repository = getenv('RELEASE_REPOSITORY');
+          $file = 'comment-management.php';
+
+          if (!is_string($repository) || !preg_match('/\A[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\z/', $repository)) {
+              fwrite(STDERR, "Invalid GitHub repository.\n");
+              exit(1);
+          }
+
+          $source = file_get_contents($file);
+          if (!is_string($source)) {
+              fwrite(STDERR, "Could not read {$file}.\n");
+              exit(1);
+          }
+
+          $source = preg_replace(
+              '/(Plugin URI:\s+)https:\/\/github\.com\/[^\r\n]+/',
+              '$1https://github.com/' . $repository,
+              $source
+          );
+          $source = preg_replace(
+              '/(Update URI:\s+)https:\/\/github\.com\/[^\r\n]+/',
+              '$1https://github.com/' . $repository,
+              $source
+          );
+          $source = preg_replace(
+              "/define\(\s*'COMMENT_MANAGEMENT_GITHUB_REPOSITORY'\s*,\s*'[^']+'\s*\);/",
+              "define( 'COMMENT_MANAGEMENT_GITHUB_REPOSITORY', '" . $repository . "' );",
+              $source
+          );
+
+          if (!is_string($source) || false === file_put_contents($file, $source)) {
+              fwrite(STDERR, "Could not stamp {$file}.\n");
+              exit(1);
+          }
+          PHP
+
+      - name: Extract release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          version='${{ steps.metadata.outputs.plugin_version }}'
+          awk -v version="${version}" '
+            $0 == "= " version " =" { found = 1; next }
+            found && /^= [0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z]+)* =$/ { exit }
+            found { print }
+          ' readme.txt > release-notes.md
+
+          if [[ ! -s release-notes.md ]]; then
+            printf 'Comment Management %s\n' "${version}" > release-notes.md
+          fi
+
+      - name: Build release ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf build dist
+          mkdir -p "build/${PLUGIN_DIR}" dist
+          rsync -a ./ "build/${PLUGIN_DIR}/" \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.idea/' \
+            --exclude 'build/' \
+            --exclude 'dist/' \
+            --exclude 'tests/' \
+            --exclude '.gitignore' \
+            --exclude 'composer.json' \
+            --exclude 'composer.lock' \
+            --exclude 'phpcs.xml.dist' \
+            --exclude 'phpunit.xml.dist' \
+            --exclude '*.iml' \
+            --exclude 'release-notes.md'
+
+          ( cd build && zip -r "../dist/${ZIP_NAME}" "${PLUGIN_DIR}" )
+          unzip -l "dist/${ZIP_NAME}" | grep -F "${PLUGIN_DIR}/comment-management.php"
+          unzip -l "dist/${ZIP_NAME}" | grep -F "${PLUGIN_DIR}/readme.txt"
+          unzip -l "dist/${ZIP_NAME}" | grep -F "${PLUGIN_DIR}/vendor/autoload.php"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: comment-management-package
+          path: |
+            dist/comment-management.zip
+            release-notes.md
+          retention-days: 14
+
+  release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Download package artifact
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: comment-management-package
+          path: release-dist
+
+      - name: Create GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PLUGIN_VERSION: ${{ needs.build.outputs.plugin_version }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release create "${TAG_NAME}" "release-dist/dist/comment-management.zip" \
+            --title "Comment Management ${PLUGIN_VERSION}" \
+            --notes-file "release-dist/release-notes.md" \
+            --verify-tag

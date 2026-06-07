@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<ruleset name="Comment Management">
+	<description>Code quality rules for the Comment Management plugin.</description>
+
+	<file>comment-management.php</file>
+	<file>includes</file>
+	<file>uninstall.php</file>
+
+	<exclude-pattern>vendor/*</exclude-pattern>
+
+	<arg name="basepath" value="."/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<config name="minimum_supported_wp_version" value="6.5"/>
+	<config name="testVersion" value="8.3-"/>
+
+	<rule ref="WordPress">
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+	</rule>
+	<rule ref="PHPCompatibilityWP"/>
+</ruleset>

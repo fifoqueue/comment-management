@@ -1,0 +1,59 @@
+.cm-controls {
+	clear: both;
+	margin-top: 0.75rem;
+	padding-top: 0.625rem;
+	border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+	font-size: 0.875rem;
+}
+
+.cm-actions,
+.cm-editor-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.375rem;
+}
+
+.cm-controls button {
+	min-height: 2rem;
+	padding: 0.25rem 0.625rem;
+	border: 1px solid currentColor;
+	border-radius: 3px;
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+}
+
+.cm-controls button:hover,
+.cm-controls button:focus-visible {
+	background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.cm-controls button:disabled {
+	cursor: wait;
+	opacity: 0.55;
+}
+
+.cm-action-danger {
+	color: #b32d2e !important;
+}
+
+.cm-editor {
+	margin-top: 0.75rem;
+}
+
+.cm-editor-content {
+	box-sizing: border-box;
+	width: 100%;
+	margin-bottom: 0.5rem;
+	font: inherit;
+}
+
+.cm-status {
+	min-height: 1.25em;
+	margin: 0.5rem 0 0;
+}
+
+.cm-status-error {
+	color: #b32d2e;
+}

@@ -1,0 +1,122 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: https://github.com/fifoqueue/comment-management/issues\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: comment-management\n"
+
+#: includes/class-comment-action-service.php:43
+msgid "This comment action is not supported."
+msgstr ""
+
+#: includes/class-comment-action-service.php:52
+msgid "The comment could not be found."
+msgstr ""
+
+#: includes/class-comment-action-service.php:65
+msgid "You are not allowed to manage this comment."
+msgstr ""
+
+#: includes/class-comment-action-service.php:84
+msgid "WordPress could not update the comment."
+msgstr ""
+
+#: includes/class-comment-action-service.php:109
+msgid "Comment content cannot be empty."
+msgstr ""
+
+#: includes/class-frontend-controller.php:75
+msgid "Permanently delete this comment? This cannot be undone."
+msgstr ""
+
+#: includes/class-frontend-controller.php:76
+msgid "The request failed. Please try again."
+msgstr ""
+
+#: includes/class-frontend-controller.php:77
+msgid "Saving..."
+msgstr ""
+
+#: includes/class-frontend-controller.php:78
+msgid "Working..."
+msgstr ""
+
+#: includes/class-frontend-controller.php:162
+msgid "You must be logged in."
+msgstr ""
+
+#: includes/class-frontend-controller.php:169
+msgid "The security token is invalid or has expired."
+msgstr ""
+
+#: includes/class-frontend-controller.php:195
+msgid "Permanent deletion was not confirmed."
+msgstr ""
+
+#: includes/class-frontend-controller.php:269
+msgid "Comment management actions"
+msgstr ""
+
+#: includes/class-frontend-controller.php:270
+msgid "Edit"
+msgstr ""
+
+#: includes/class-frontend-controller.php:271
+msgid "Unapprove"
+msgstr ""
+
+#: includes/class-frontend-controller.php:272
+msgid "Mark as spam"
+msgstr ""
+
+#: includes/class-frontend-controller.php:273
+msgid "Move to Trash"
+msgstr ""
+
+#: includes/class-frontend-controller.php:274
+msgid "Delete permanently"
+msgstr ""
+
+#: includes/class-frontend-controller.php:275
+msgid "Comment content"
+msgstr ""
+
+#: includes/class-frontend-controller.php:276
+msgid "Save"
+msgstr ""
+
+#: includes/class-frontend-controller.php:277
+msgid "Cancel"
+msgstr ""
+
+#: includes/class-frontend-controller.php:303
+msgid "The comment was moved to the Trash."
+msgstr ""
+
+#: includes/class-frontend-controller.php:304
+msgid "The comment was marked as spam."
+msgstr ""
+
+#: includes/class-frontend-controller.php:305
+msgid "The comment was unapproved."
+msgstr ""
+
+#: includes/class-frontend-controller.php:306
+#: includes/class-frontend-controller.php:308
+msgid "The comment was updated."
+msgstr ""
+
+#: includes/class-frontend-controller.php:307
+msgid "The comment was permanently deleted."
+msgstr ""
+
+#: includes/class-updater.php:48
+msgid "Comment Management is missing its Composer dependencies. Install a release package or run composer install."
+msgstr ""
