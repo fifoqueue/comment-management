@@ -150,6 +150,16 @@ final class CommentActionServiceTest extends TestCase {
 		self::assertSame( 'spam', Test_State::$comment->comment_approved );
 	}
 
+	public function test_tampered_undo_token_is_rejected(): void {
+		$result = $this->service->execute( 42, 'trash' );
+		$token  = $result['undo_token'] . 'x';
+
+		$undone = $this->service->execute( 42, 'undo', null, $token );
+
+		self::assertInstanceOf( \WP_Error::class, $undone );
+		self::assertSame( 'trash', Test_State::$comment->comment_approved );
+	}
+
 	public function test_returns_core_mutation_errors(): void {
 		Test_State::$mutation_result = new \WP_Error( 'database_error', 'Database error.' );
 

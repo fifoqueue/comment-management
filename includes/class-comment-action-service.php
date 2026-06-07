@@ -15,7 +15,6 @@ defined( 'ABSPATH' ) || exit;
 final class Comment_Action_Service {
 	private const HISTORY_META_KEY = '_comment_management_edit_history';
 	private const HISTORY_LIMIT    = 20;
-	private const UNDO_META_KEY    = '_comment_management_undo_tokens';
 	private const UNDO_TTL         = 300;
 
 	/**
@@ -285,34 +284,26 @@ final class Comment_Action_Service {
 		string $action,
 		string $previous_status
 	): string {
-		$token  = wp_generate_password( 32, false, false );
-		$tokens = get_comment_meta(
-			$comment->comment_ID,
-			self::UNDO_META_KEY,
-			true
-		);
-		$tokens = is_array( $tokens ) ? $tokens : array();
-		$now    = time();
-		$tokens = array_filter(
-			$tokens,
-			static fn ( mixed $data ): bool => (
-				is_array( $data )
-				&& isset( $data['expires_at'] )
-				&& $now <= (int) $data['expires_at']
+		$payload = wp_json_encode(
+			array(
+				'user_id'         => get_current_user_id(),
+				'comment_id'      => $comment->comment_ID,
+				'action'          => $action,
+				'previous_status' => $previous_status,
+				'expires_at'      => time() + self::UNDO_TTL,
+				'nonce'           => wp_generate_password( 20, false, false ),
 			)
 		);
 
-		$tokens[ hash( 'sha256', $token ) ] = array(
-			'user_id'         => get_current_user_id(),
-			'comment_id'      => $comment->comment_ID,
-			'action'          => $action,
-			'previous_status' => $previous_status,
-			'expires_at'      => $now + self::UNDO_TTL,
-		);
+		if ( ! is_string( $payload ) ) {
+			return '';
+		}
 
-		update_comment_meta( $comment->comment_ID, self::UNDO_META_KEY, $tokens );
+		// Base64url encodes signed token data for safe transport in form fields.
+		$encoded   = rtrim( strtr( base64_encode( $payload ), '+/', '-_' ), '=' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+		$signature = hash_hmac( 'sha256', $encoded, wp_salt( 'nonce' ) );
 
-		return $token;
+		return $encoded . '.' . $signature;
 	}
 
 	/**
@@ -330,15 +321,28 @@ final class Comment_Action_Service {
 			);
 		}
 
-		$key    = hash( 'sha256', $token );
-		$tokens = get_comment_meta(
-			$comment->comment_ID,
-			self::UNDO_META_KEY,
-			true
-		);
-		$data   = is_array( $tokens ) && isset( $tokens[ $key ] )
-			? $tokens[ $key ]
-			: null;
+		$parts = explode( '.', $token, 2 );
+		$data  = null;
+
+		if (
+			2 === count( $parts )
+			&& hash_equals(
+				hash_hmac( 'sha256', $parts[0], wp_salt( 'nonce' ) ),
+				$parts[1]
+			)
+		) {
+			$encoded = strtr( $parts[0], '-_', '+/' );
+			$padding = strlen( $encoded ) % 4;
+
+			if ( 0 !== $padding ) {
+				$encoded .= str_repeat( '=', 4 - $padding );
+			}
+
+			$decoded = base64_decode( $encoded, true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
+			$data    = is_string( $decoded )
+				? json_decode( $decoded, true )
+				: null;
+		}
 
 		if (
 			! is_array( $data )
@@ -352,20 +356,13 @@ final class Comment_Action_Service {
 			|| get_current_user_id() !== (int) $data['user_id']
 			|| (int) $data['comment_id'] !== $comment->comment_ID
 			|| time() > (int) $data['expires_at']
+			|| ! $this->has_expected_undo_status( $comment, (string) $data['action'] )
 		) {
-			if ( is_array( $tokens ) && isset( $tokens[ $key ] ) ) {
-				unset( $tokens[ $key ] );
-				$this->store_undo_tokens( $comment->comment_ID, $tokens );
-			}
-
 			return new \WP_Error(
 				'comment_management_invalid_undo',
 				__( 'The undo request is invalid or has expired.', 'comment-management' )
 			);
 		}
-
-		unset( $tokens[ $key ] );
-		$this->store_undo_tokens( $comment->comment_ID, $tokens );
 
 		$result = match ( $data['action'] ) {
 			'trash'     => wp_untrash_comment( $comment ),
@@ -398,17 +395,20 @@ final class Comment_Action_Service {
 	}
 
 	/**
-	 * Store or remove the undo-token collection for a comment.
+	 * Check that the original moderation action is still in effect.
 	 *
-	 * @param int                  $comment_id Comment ID.
-	 * @param array<string, mixed> $tokens     Token data keyed by token hash.
+	 * @param \WP_Comment $comment Comment object.
+	 * @param string      $action  Original action.
+	 * @return bool
 	 */
-	private function store_undo_tokens( int $comment_id, array $tokens ): void {
-		if ( array() === $tokens ) {
-			delete_comment_meta( $comment_id, self::UNDO_META_KEY );
-			return;
-		}
+	private function has_expected_undo_status( \WP_Comment $comment, string $action ): bool {
+		$status = (string) $comment->comment_approved;
 
-		update_comment_meta( $comment_id, self::UNDO_META_KEY, $tokens );
+		return match ( $action ) {
+			'trash'     => 'trash' === $status,
+			'spam'      => 'spam' === $status,
+			'unapprove' => in_array( $status, array( '0', 'hold' ), true ),
+			default     => false,
+		};
 	}
 }
