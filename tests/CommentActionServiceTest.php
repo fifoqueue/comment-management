@@ -100,29 +100,22 @@ final class CommentActionServiceTest extends TestCase {
 		self::assertSame( 'Version 1', $history['history'][19]['content'] );
 	}
 
-	public function test_moderation_action_can_be_undone_once(): void {
+	public function test_moderation_action_can_be_undone(): void {
 		$result = $this->service->execute( 42, 'trash' );
 
 		self::assertSame( 'trash', Test_State::$comment->comment_approved );
-		self::assertNotEmpty( $result['undo_token'] );
+		self::assertSame( 'trash.1', $result['undo_reference'] );
 
 		$undone = $this->service->execute(
 			42,
 			'undo',
 			null,
-			$result['undo_token']
+			$result['undo_reference']
 		);
 
 		self::assertIsArray( $undone );
 		self::assertSame( 'approve', Test_State::$comment->comment_approved );
 
-		$reused = $this->service->execute(
-			42,
-			'undo',
-			null,
-			$result['undo_token']
-		);
-		self::assertInstanceOf( \WP_Error::class, $reused );
 	}
 
 	public function test_unapprove_can_be_undone_to_approved_status(): void {
@@ -130,31 +123,28 @@ final class CommentActionServiceTest extends TestCase {
 
 		self::assertSame( 'hold', Test_State::$comment->comment_approved );
 
-		$this->service->execute( 42, 'undo', null, $result['undo_token'] );
+		$this->service->execute( 42, 'undo', null, $result['undo_reference'] );
 
 		self::assertSame( 'approve', Test_State::$comment->comment_approved );
 	}
 
-	public function test_undo_token_is_bound_to_user(): void {
-		$result = $this->service->execute( 42, 'spam' );
-		Test_State::$current_user_id = 9;
-
+	public function test_invalid_undo_reference_is_rejected(): void {
+		$this->service->execute( 42, 'spam' );
 		$undone = $this->service->execute(
 			42,
 			'undo',
 			null,
-			$result['undo_token']
+			'unknown.1'
 		);
 
 		self::assertInstanceOf( \WP_Error::class, $undone );
 		self::assertSame( 'spam', Test_State::$comment->comment_approved );
 	}
 
-	public function test_tampered_undo_token_is_rejected(): void {
-		$result = $this->service->execute( 42, 'trash' );
-		$token  = $result['undo_token'] . 'x';
+	public function test_invalid_previous_status_is_rejected(): void {
+		$this->service->execute( 42, 'trash' );
 
-		$undone = $this->service->execute( 42, 'undo', null, $token );
+		$undone = $this->service->execute( 42, 'undo', null, 'trash.invalid' );
 
 		self::assertInstanceOf( \WP_Error::class, $undone );
 		self::assertSame( 'trash', Test_State::$comment->comment_approved );

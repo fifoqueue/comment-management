@@ -186,7 +186,7 @@
 
 	let undoTimer = null;
 
-	const showUndo = ( controls, message, token ) => {
+	const showUndo = ( controls, message, reference ) => {
 		let notice = document.querySelector( '.cm-undo-notice' );
 
 		if ( ! notice ) {
@@ -208,7 +208,12 @@
 			button.disabled = true;
 
 			try {
-				const payload = await request( controls, 'undo', null, token );
+				const payload = await request(
+					controls,
+					'undo',
+					null,
+					reference
+				);
 				updateStatusBadge(
 					controls,
 					payload.data.status,
@@ -487,7 +492,7 @@
 			showUndo(
 				controls,
 				payload.data.message,
-				payload.data.undoToken
+				payload.data.undoReference
 			);
 		} ).catch( ( error ) => {
 			setStatus( controls, error.message, true );

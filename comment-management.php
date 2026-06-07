@@ -3,7 +3,7 @@
  * Plugin Name:       Comment Management
  * Plugin URI:        https://github.com/fifoqueue/comment-management
  * Description:       Securely manage WordPress comments from the front end.
- * Version:           1.1.5
+ * Version:           1.1.6
  * Requires at least: 6.5
  * Requires PHP:      8.3
  * Author:            FiLo
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'COMMENT_MANAGEMENT_VERSION', '1.1.5' );
+define( 'COMMENT_MANAGEMENT_VERSION', '1.1.6' );
 define( 'COMMENT_MANAGEMENT_FILE', __FILE__ );
 define( 'COMMENT_MANAGEMENT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'COMMENT_MANAGEMENT_URL', plugin_dir_url( __FILE__ ) );

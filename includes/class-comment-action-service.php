@@ -15,7 +15,6 @@ defined( 'ABSPATH' ) || exit;
 final class Comment_Action_Service {
 	private const HISTORY_META_KEY = '_comment_management_edit_history';
 	private const HISTORY_LIMIT    = 20;
-	private const UNDO_TTL         = 300;
 
 	/**
 	 * Supported action names.
@@ -123,12 +122,8 @@ final class Comment_Action_Service {
 		);
 
 		if ( in_array( $action, array( 'trash', 'spam', 'unapprove' ), true ) ) {
-			$response['undo_token'] = $this->create_undo_token(
-				$comment,
-				$action,
-				$previous_status
-			);
-			$response['status']     = $action;
+			$response['undo_reference'] = $action . '.' . $previous_status;
+			$response['status']         = $action;
 		}
 
 		return $response;
@@ -272,97 +267,31 @@ final class Comment_Action_Service {
 	}
 
 	/**
-	 * Create a one-time undo token.
-	 *
-	 * @param \WP_Comment $comment         Comment object.
-	 * @param string      $action          Original action.
-	 * @param string      $previous_status Previous comment status.
-	 * @return string
-	 */
-	private function create_undo_token(
-		\WP_Comment $comment,
-		string $action,
-		string $previous_status
-	): string {
-		$payload = wp_json_encode(
-			array(
-				'user_id'         => get_current_user_id(),
-				'comment_id'      => $comment->comment_ID,
-				'action'          => $action,
-				'previous_status' => $previous_status,
-				'expires_at'      => time() + self::UNDO_TTL,
-				'nonce'           => wp_generate_password( 20, false, false ),
-			)
-		);
-
-		if ( ! is_string( $payload ) ) {
-			return '';
-		}
-
-		// Base64url encodes signed token data for safe transport in form fields.
-		$encoded   = rtrim( strtr( base64_encode( $payload ), '+/', '-_' ), '=' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
-		$signature = hash_hmac( 'sha256', $encoded, wp_salt( 'nonce' ) );
-
-		return $encoded . '.' . $signature;
-	}
-
-	/**
 	 * Undo a moderation action.
 	 *
-	 * @param \WP_Comment $comment Comment object.
-	 * @param string      $token   One-time undo token.
+	 * @param \WP_Comment $comment   Comment object.
+	 * @param string      $reference Original action and previous status.
 	 * @return array<string, mixed>|\WP_Error
 	 */
-	private function undo_action( \WP_Comment $comment, string $token ): array|\WP_Error {
-		if (
-			'' === $token
-			|| 1 !== preg_match( '/\A[A-Za-z0-9_-]+\.[a-f0-9]{64}\z/', $token )
-		) {
+	private function undo_action( \WP_Comment $comment, string $reference ): array|\WP_Error {
+		$parts = explode( '.', $reference, 2 );
+
+		if ( 2 !== count( $parts ) ) {
 			return new \WP_Error(
 				'comment_management_invalid_undo',
 				__( 'The undo request is invalid or has expired.', 'comment-management' )
 			);
 		}
 
-		$parts = explode( '.', $token, 2 );
-		$data  = null;
+		$action          = $parts[0];
+		$previous_status = $this->normalize_status_for_update( $parts[1] );
 
 		if (
-			2 === count( $parts )
-			&& hash_equals(
-				hash_hmac( 'sha256', $parts[0], wp_salt( 'nonce' ) ),
-				$parts[1]
-			)
-		) {
-			$encoded = strtr( $parts[0], '-_', '+/' );
-			$padding = strlen( $encoded ) % 4;
-
-			if ( 0 !== $padding ) {
-				$encoded .= str_repeat( '=', 4 - $padding );
-			}
-
-			$decoded = base64_decode( $encoded, true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
-			$data    = is_string( $decoded )
-				? json_decode( $decoded, true )
-				: null;
-		}
-
-		if (
-			! is_array( $data )
-			|| ! isset(
-				$data['user_id'],
-				$data['comment_id'],
-				$data['action'],
-				$data['previous_status'],
-				$data['expires_at']
-			)
-			|| get_current_user_id() !== (int) $data['user_id']
-			|| (int) $data['comment_id'] !== $comment->comment_ID
-			|| time() > (int) $data['expires_at']
-			|| ! in_array( $data['action'], array( 'trash', 'spam', 'unapprove' ), true )
-			|| $this->statuses_match(
-				(string) $comment->comment_approved,
-				(string) $data['previous_status']
+			! in_array( $action, array( 'trash', 'spam', 'unapprove' ), true )
+			|| ! in_array(
+				$previous_status,
+				array( 'approve', 'hold', 'spam', 'trash' ),
+				true
 			)
 		) {
 			return new \WP_Error(
@@ -373,7 +302,7 @@ final class Comment_Action_Service {
 
 		$result = wp_set_comment_status(
 			$comment,
-			$this->normalize_status_for_update( (string) $data['previous_status'] ),
+			$previous_status,
 			true
 		);
 
@@ -392,20 +321,8 @@ final class Comment_Action_Service {
 			'action'     => 'undo',
 			'comment_id' => $comment->comment_ID,
 			'removed'    => false,
-			'status'     => (string) $data['previous_status'],
+			'status'     => $previous_status,
 		);
-	}
-
-	/**
-	 * Compare WordPress's numeric and named comment status representations.
-	 *
-	 * @param string $first  First status.
-	 * @param string $second Second status.
-	 * @return bool
-	 */
-	private function statuses_match( string $first, string $second ): bool {
-		return $this->normalize_status_for_update( $first )
-			=== $this->normalize_status_for_update( $second );
 	}
 
 	/**

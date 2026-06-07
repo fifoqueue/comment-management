@@ -169,14 +169,6 @@ namespace FiLo\CommentManagement {
 		return str_repeat( 'a', $length - 1 ) . 'b';
 	}
 
-	function wp_json_encode( mixed $value ): string|false {
-		return json_encode( $value );
-	}
-
-	function wp_salt( string $scheme = 'auth' ): string {
-		return 'test-' . $scheme . '-salt';
-	}
-
 	function get_current_user_id(): int {
 		return Test_State::$current_user_id;
 	}

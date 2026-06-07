@@ -221,18 +221,18 @@ final class Frontend_Controller {
 		}
 
 		$response = array(
-			'action'      => $result['action'],
-			'commentId'   => $result['comment_id'],
-			'removed'     => $result['removed'],
-			'message'     => $this->get_success_message( $result['action'] ),
-			'contentHtml' => '',
-			'contentRaw'  => '',
-			'history'     => $result['history'] ?? array(),
-			'status'      => $result['status'] ?? '',
-			'statusLabel' => isset( $result['status'] )
+			'action'        => $result['action'],
+			'commentId'     => $result['comment_id'],
+			'removed'       => $result['removed'],
+			'message'       => $this->get_success_message( $result['action'] ),
+			'contentHtml'   => '',
+			'contentRaw'    => '',
+			'history'       => $result['history'] ?? array(),
+			'status'        => $result['status'] ?? '',
+			'statusLabel'   => isset( $result['status'] )
 				? $this->get_status_label( (string) $result['status'] )
 				: '',
-			'undoToken'   => $result['undo_token'] ?? '',
+			'undoReference' => $result['undo_reference'] ?? '',
 		);
 
 		if (
