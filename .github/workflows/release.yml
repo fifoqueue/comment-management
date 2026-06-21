@@ -23,7 +23,7 @@ jobs:
           - "8.5"
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.0
 
       - name: Set up PHP
         uses: shivammathur/setup-php@2.37.1
@@ -67,7 +67,7 @@ jobs:
       ZIP_NAME: comment-management.zip
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.0
 
       - name: Set up PHP
         uses: shivammathur/setup-php@2.37.1
@@ -225,7 +225,7 @@ jobs:
       contents: write
     steps:
       - name: Check out repository with tags
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.0
         with:
           fetch-depth: 0
 
