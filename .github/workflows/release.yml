@@ -208,7 +208,7 @@ jobs:
           unzip -l "dist/${ZIP_NAME}" | grep -F "${PLUGIN_DIR}/vendor/autoload.php"
 
       - name: Upload package artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: comment-management-package
           path: |
