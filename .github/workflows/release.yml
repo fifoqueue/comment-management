@@ -230,7 +230,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download package artifact
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           name: comment-management-package
           path: release-dist
